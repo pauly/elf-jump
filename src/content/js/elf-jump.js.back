@@ -1,0 +1,232 @@
+/* global Audio Image requestAnimationFrame localStorage */
+((window, document) => {
+  const canvas = document.getElementById('canvas')
+  // canvas.style.width = window.innerWidth + 'px'
+  // canvas.style.height = window.innerHeight + 'px'
+  const canvasWidth = canvas.width
+  const ctx = canvas.getContext('2d')
+
+  const invertHex = hex => (Number(`0x1${hex}`) ^ 0xFFFFFF).toString(16) // substr(1) // toUpperCase()
+
+  const info = foo => Math.round(foo.cx) + ',' + Math.round(foo.cy) /* + ' ' + foo.width + 'x' + foo.height */ + ' 🚀' + foo.vy.toFixed(2)
+  // const debug = foo => foo.src.split('/').pop() + ' ' + info(foo)
+
+  const img = (file, x, y, vx, vy, elem) => {
+    elem = new Image()
+    elem.src = 'img/' + file + '.png'
+    elem.cx = x
+    elem.cy = y
+    elem.vx = vx || 0
+    elem.vy = vy || 0
+    // console.log('new', debug(elem))
+    return elem
+  }
+
+  // better minifying
+  const audio = sound => new Audio('sounds/' + sound + '.mp3')
+  const bounce = audio('bounce')
+  const falling = audio('falling')
+  const fart = audio('fart')
+
+  const fontFace = 'Verdana'
+  const gravity = 0.1
+  const damping = 1
+  const traction = 0.9
+  const boost = 10
+  const maxVX = 1.3
+
+  const player = img('elf', 0, 0, 0, boost)
+  const drawRelativeToPlayer = (obj) => {
+    const x = obj.cx - player.cx + (canvasWidth - obj.width) / 2 + obj.vx
+    const y = obj.cy - player.cy + (canvas.height - obj.height) / 2 + obj.vy
+    ctx.drawImage(obj, x, y)
+    if (process.env.NODE_ENV === 'development') {
+      // ctx.strokeStyle = '#0f0'
+      // ctx.strokeRect(x, y, obj.width, obj.height)
+      ctx.font = '10px ' + fontFace
+      ctx.fillText(info(obj), x, y + obj.height + 10)
+    }
+  }
+  const left = obj => obj.cx - obj.width / 2
+  const right = obj => left(obj) + obj.width
+  const top = obj => obj.cy - obj.height / 2
+  const bottom = obj => top(obj) + obj.height
+  const checkCollision = (obj1, obj2) => {
+    if (left(obj1) > right(obj2)) return 0
+    if (left(obj2) > right(obj1)) return 0
+    if (top(obj1) > bottom(obj2)) return 0
+    if (top(obj2) > bottom(obj1)) return 0
+    return 1
+  }
+
+  const checkLandedOn = (obj1, obj2) => {
+    if (!checkCollision(obj1, obj2)) return 0
+
+    // if last time obj1 was not above obj2 then it's not a landing
+    // remember > means further down the page
+    // console.log('compare', bottom(obj1), '-', gravity, 'with', top(obj2))
+    if (bottom(obj1) - player.vy > top(obj2)) return 0
+    // else obj1 just moved down onto obj2 so it's a landing...
+    console.log(bottom(obj1), '<=', top(obj2))
+
+    // if (bottom(obj1) > top(obj2) + obj2.height) return 0
+    return 1
+  }
+
+  let powerUpTimeout // eslint-disable-line
+
+  let score = 0
+  let config = {}
+  let best = 0 // 289 Tommy
+  try {
+    config = JSON.parse(localStorage.getItem(process.env.npm_package_name))
+    best = config.best
+    console.log(config, localStorage.getItem(process.env.npm_package_name))
+  } catch (e) {
+    console.log('config load failed', e)
+    best = localStorage.getItem(process.env.npm_package_name + 'best')
+    console.log(config, localStorage.getItem(process.env.npm_package_name + 'best'))
+  }
+
+  let playing = 1
+  // let debugInfo = ''
+
+  const move = (event, key, action, x) => {
+    event.preventDefault()
+    if (!playing) return window.location.reload() // reload the page
+    key = event.key
+    x = event.clientX
+    // console.log(event)
+    if (/right/i.test(key)) {
+      action = 'r'
+    } else if (/left/i.test(key)) {
+      action = 'l'
+    } else if (x < canvasWidth / 2) {
+      action = 'l'
+    } else if (x > canvasWidth / 2) {
+      action = 'r'
+    } else if (/q/i.test(key)) {
+      playing = 0
+    }
+    if (action === 'l') {
+      // player.vx = Math.min(-maxVX, player.vx - maxVX / 3)
+      player.vx = -maxVX
+      // debugInfo = key + ' ◀️ ' + player.vx
+    } else if (action === 'r') {
+      // player.vx = Math.max(maxVX, player.vx + maxVX / 3)
+      player.vx = maxVX
+      // debugInfo = key + ' ▶️ ' + player.vx
+    }
+  }
+  document.addEventListener('keydown', move)
+  // document.addEventListener('touchstart', move)
+  document.addEventListener('click', move)
+
+  const random = n => Math.round(Math.random() * n)
+
+  const platform = [
+    img('cane', 0, 300)
+  ]
+  const powerUp = [
+  ]
+
+  let highestPlatform = Math.min.apply(null, platform.map(platform => platform.cy))
+  let lowestPlatform = Math.max.apply(null, platform.map(platform => platform.cy))
+
+  function animate (timestamp) {
+    if (playing) requestAnimationFrame(animate)
+
+    const modifier = Math.round(player.cy / 100)
+    ctx.fillStyle = `rgb(${220 + modifier}, ${230 + modifier}, ${255 + modifier})`
+    ctx.fillRect(0, 0, canvasWidth, canvas.height)
+    ctx.fillStyle = '#' + invertHex(ctx.fillStyle.substr(2))
+
+    /* if (player.cx > canvasWidth * 0.5) {
+      player.cx = canvasWidth * 0.5
+      player.vx = 0
+    }
+    if (player.cx < canvasWidth * -0.5) {
+      player.cx = canvasWidth * -0.5
+      player.vx = 0
+    } */
+
+    for (let i = 0; i < platform.length; i++) {
+      drawRelativeToPlayer(platform[i])
+
+      const hitPlatform = checkLandedOn(player, platform[i])
+      if (hitPlatform) {
+        if (player.vy >= 0) { // if player is falling
+          player.vy = Math.min(-player.vy * damping, -boost)
+          player.vx *= traction
+          bounce.play()
+          // console.log('bounce', debug(player), player.vx.toFixed(2), player.vy.toFixed(2))
+        }
+      }
+
+      if (platform[i].cy > player.cy + canvas.height * 1.5) {
+        platform.splice(i, 1)
+        lowestPlatform = platform[0].cy
+        console.log('remove', i, 'as we passed it, we now have', platform.length, 'platforms')
+      }
+    }
+
+    for (let i = 0; i < powerUp.length; i++) {
+      if (checkCollision(player, powerUp[i])) {
+        powerUp.splice(i, 1)
+        powerUpTimeout = setTimeout(() => {
+          player.vy = 0
+        }, 2000)
+        player.vy = boost * -3
+        fart.play()
+      } else {
+        drawRelativeToPlayer(powerUp[i])
+      }
+    }
+
+    player.vy += gravity
+    player.cx += player.vx
+    player.cy += player.vy
+
+    player.src = 'img/elf' + (player.vy > 1 ? '-down' : '') + '.png'
+
+    // draw player in the middle of the screen
+    drawRelativeToPlayer(player)
+
+    // highest is really a lower number
+    if (player.cy < highestPlatform) {
+      const y = highestPlatform -= random(200) + 200 - player.cy / 1000
+      let x = Infinity
+      // console.log(platform[platform.length - 1].cx, Math.abs(platform[platform.length - 1].cx - x) > canvasWidth / 2)
+      while (Math.abs(platform[platform.length - 1].cx - x) > platform[platform.length - 1].width * 3) {
+        x = random(canvasWidth) - (canvasWidth / 2)
+        // console.log({ x, y })
+      }
+      platform.push(img('cane' + (Math.round(Math.random()) ? '2' : ''), x, y))
+      highestPlatform = y
+      score++
+      if (score > best) best = score
+      if (random(10) > 9) {
+        powerUp.push(img('sprout', x, y - platform[0].height))
+      }
+    }
+
+    if (player.cy > lowestPlatform) {
+      falling.play()
+      playing = 0
+      config.best = best
+      localStorage.setItem(process.env.npm_package_name, JSON.stringify(config))
+    }
+
+    ctx.font = '16px ' + fontFace
+    ctx.fillText('Jump Jackie!', 10, 20)
+    if (!playing) {
+      ctx.fillText('◀️ and ▶️ to move', 10, 40)
+    }
+    // ctx.fillText(debugInfo, 10, 60)
+    const scoreText = 'Score: ' + score + (playing ? '' : ' GAME OVER!')
+    ctx.fillText(scoreText, 10, canvas.height - 40)
+    ctx.fillText('Best: ' + best, 10, canvas.height - 20)
+  }
+
+  requestAnimationFrame(animate)
+})(window, document)

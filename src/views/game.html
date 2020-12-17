@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="manifest" href="/manifest.json">
+  <title>{{ title or tag | striptags | capitalize }}</title>
+  <meta name="Description" content="{{ description or title }}">
+  <meta name="Keywords" content="game, javascript">
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+  <link inline amp-custom rel="stylesheet" href="/css/{{ game }}.css">
+  <link rel="preload" href="css/body.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+</head>
+
+<body>
+{% block body %}{{- contents | safe }}{% endblock %}
+<script {% if inline %}inline {% endif %}src="/js/{{ game }}.js"></script>
+</body></html>
