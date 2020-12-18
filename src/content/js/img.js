@@ -2,7 +2,9 @@
 
 module.exports = (file, x, y, vx, vy, elem) => {
   elem = new Image()
+  console.log(file)
   elem.src = 'img/' + file + '.png'
+  elem.type = file
   elem.cx = x
   elem.cy = y
   elem.vx = vx || 0

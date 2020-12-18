@@ -11,14 +11,14 @@
     best = 0,
     font = 'Verdana',
     platforms = 6, // to keep in play
-    interval = 150, // to keep in play
+    interval = 150,
     maxJump = 250,
     timeout = 2000,
     gravity = 0.11, // probably don't change these
     // traction = 0.9,
     boost = 10,
     maxVX = 1.3
-  } = config
+  } = config || {}
 
   const canvas = document.getElementById('canvas')
   const ctx = canvas.getContext('2d')
@@ -33,19 +33,15 @@
   const fart = audio('fart')
 
   const player = img('elf', 0, 0, 0, boost)
-  const drawRelativeTo = ctx => player => obj => {
-    const x = obj.cx // - player.cx + (ctx.canvas.width - obj.width) / 2 + obj.vx
-    const y = obj.cy // - player.cy + (ctx.canvas.height - obj.height) + obj.vy
-    ctx.drawImage(obj, x, y)
-    if (process.env.NODE_ENV === 'development') {
-      const info = foo => Math.round(foo.cx) + ',' + Math.round(foo.cy) /* + ' ' + foo.width + 'x' + foo.height */ + ' 🚀' + foo.vy.toFixed(2)
-      ctx.strokeStyle = '#0f0'
-      ctx.strokeRect(x, y, obj.width, obj.height)
-      ctx.font = '10px ' + font
-      ctx.fillText(info(obj), x, y + obj.height + 10)
-    }
-  }
+  const drawRelativeTo = require('./drawRelativeTo')
   const checkCollision = require('./checkCollision')
+
+  const gameOver = () => {
+    falling.play()
+    playing = 0
+    config.best = best
+    localStorage.setItem(process.env.npm_package_name, JSON.stringify(config))
+  }
 
   let powerUpTimeout // eslint-disable-line
 
@@ -53,28 +49,27 @@
   let playing = 1
 
   const move = (event, key, x) => {
-    event.preventDefault()
-    if (!playing) return window.location.reload() // reload the page
+    // event.preventDefault()
     key = event.key
     x = event.clientX
     if (/right/i.test(key) || (x > canvas.width / 2)) {
+      if (!playing) return window.location.reload() // reload the page
       player.vx = maxVX
     }
     if (/left/i.test(key) || (x < canvas.width / 2)) {
+      if (!playing) return window.location.reload() // reload the page
       player.vx = -maxVX
     }
-    if (/q/i.test(key)) {
-      playing = 0
-    }
+    if (/q/i.test(key)) gameOver()
   }
 
   document.addEventListener('keydown', move)
   document.addEventListener('click', move)
 
-  const random = n => Math.round(Math.random() * n)
+  const random = n => Math.ceil(Math.random() * n)
 
   const platform = [
-    img('cane1', 0, 300),
+    img('cane3', 0, 300),
     img('cane2', 0, -300)
   ]
   const powerUp = [
@@ -141,7 +136,7 @@
       const x = platform[platform.length - 1].cx + random(maxJump * 2) - maxJump
       console.log({ x, y })
 
-      platform.push(img('cane' + random(3)), x, y)
+      platform.push(img('cane' + random(4), x, y))
       highestPlatform = y
       score++
       if (score > best) best = score
@@ -155,12 +150,7 @@
       }
     }
 
-    if (player.cy > lowestPlatform) {
-      falling.play()
-      playing = 0
-      config.best = best
-      localStorage.setItem(process.env.npm_package_name, JSON.stringify(config))
-    }
+    if (player.cy > lowestPlatform) gameOver()
 
     ctx.font = '16px ' + font
     ctx.fillText('Jump Jackie!', 10, 20)

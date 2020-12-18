@@ -48,10 +48,10 @@
     key = event.key
     x = event.clientX
     if (/right/i.test(key) || (x > canvas.width / 2)) {
-      player.vx = Math.max(1, player.vx + 1)
+      player.vx = Math.max(2, player.vx + 1)
     }
     if (/left/i.test(key) || (x < canvas.width / 2)) {
-      player.vx = Math.min(-1, player.vx - 1)
+      player.vx = Math.min(-2, player.vx - 1)
     }
     if (/q/i.test(key)) {
       playing = 0
@@ -71,16 +71,18 @@
   function animate (timestamp) {
     if (playing) requestAnimationFrame(animate)
 
-    ctx.fillStyle = '#f6f6f6'
+    ctx.fillStyle = '#fff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = '#000'
 
-    if (player.cx > canvas.width) {
-      player.cx = canvas.width
+    const right = canvas.width - player.width / 2
+    if (player.cx > right) {
+      player.cx = right
       player.vx = 0
     }
-    if (player.cx < 0) {
-      player.cx = 0
+    const left = -player.width / 2
+    if (player.cx < left) {
+      player.cx = left
       player.vx = 0
     }
 
@@ -92,18 +94,13 @@
         item.splice(i, 1)
         if (score++ > best) best = score
         bing.play()
-        // const x = random(canvas.width - 100) + 50
-        // const y = 0
-        // const product = products[random(products.length)]
-        // console.log({ x, y, product })
       } else {
         drawRelativeTo(ctx)(player)(item[i])
       }
     }
 
     player.cx += player.vx
-
-    // player.src = 'img/basket' + (player.vx > 1 ? '1' : '2') + '.png'
+    player.src = 'img/basket-' + (player.vx > 1 ? 'right' : 'left') + '.png'
 
     drawRelativeTo(ctx)(player)(player)
 
