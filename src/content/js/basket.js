@@ -1,8 +1,9 @@
 /* global requestAnimationFrame localStorage */
 ((window, document) => {
+  const id = 'basket-game'
   let config = {}
   try {
-    config = JSON.parse(localStorage.getItem(process.env.npm_package_name))
+    config = JSON.parse(localStorage.getItem(id)) || {}
   } catch (e) {
     console.log('config load failed', e)
   }
@@ -11,8 +12,13 @@
     best = 0,
     gravity = 0.10
   } = config
+  console.log({ config })
 
   const canvas = document.getElementById('canvas')
+  if (!canvas) {
+    return console.log('no canvas so no game')
+  }
+
   const ctx = canvas.getContext('2d')
   ctx.strokeStyle = '#000'
   ctx.font = '16px Verdana'
@@ -42,19 +48,26 @@
   let score = 0
   let playing = 1
 
+  const gameOver = () => {
+    playing = 0
+    config.best = best
+    localStorage.setItem(id, JSON.stringify(config))
+  }
+
   const move = (event, key, x) => {
-    event.preventDefault()
-    if (!playing) return window.location.reload() // reload the page
+    // event.preventDefault()
     key = event.key
     x = event.clientX
     if (/right/i.test(key) || (x > canvas.width / 2)) {
+      if (!playing) return start()
       player.vx = Math.max(2, player.vx + 1)
     }
     if (/left/i.test(key) || (x < canvas.width / 2)) {
+      if (!playing) return start()
       player.vx = Math.min(-2, player.vx - 1)
     }
     if (/q/i.test(key)) {
-      playing = 0
+      gameOver()
     }
   }
 
@@ -63,10 +76,13 @@
 
   const random = n => Math.floor(Math.random() * n)
 
-  const products = ['sprout', 'beer', 'burger']
-  const item = [
-    img('sprout', canvas.width / 2, 0)
-  ]
+  // product keys and what they are disallowed for
+  const products = {
+    sprout: null,
+    beer: 'T_TOTAL',
+    burger: 'VEGI'
+  }
+  let item = []
 
   function animate (timestamp) {
     if (playing) requestAnimationFrame(animate)
@@ -90,10 +106,16 @@
       item[i].vy += gravity
       item[i].cy += item[i].vy
       if (checkCollision(player, item[i])) {
-        console.log(info(player), 'and', info(item[i]), 'collide!')
+        // console.log(info(player), 'and', info(item[i]), 'collide!')
+        const checkbox = document.getElementById(products[item[i].name])
+        console.log('got', item[i].name, checkbox && checkbox.checked)
+        if (checkbox && checkbox.checked) {
+          gameOver()
+        } else {
+          if (score++ > best) best = score
+          bing.play()
+        }
         item.splice(i, 1)
-        if (score++ > best) best = score
-        bing.play()
       } else {
         drawRelativeTo(ctx)(player)(item[i])
       }
@@ -107,13 +129,10 @@
     if (random(1000) > 990) {
       const x = random(canvas.width - 100) + 50
       const y = 0
-      const product = products[random(products.length)]
+      const product = Object.keys(products)[random(Object.keys(products).length)]
       console.log({ x, y, product })
       item.push(img(product, x, y))
     }
-
-    // config.best = best
-    // localStorage.setItem(process.env.npm_package_name, JSON.stringify(config))
 
     ctx.strokeStyle = '#000'
     if (!playing) {
@@ -124,5 +143,11 @@
     ctx.fillText('Best: ' + best, 10, canvas.height - 20)
   }
 
-  requestAnimationFrame(animate)
+  const start = () => {
+    item = [img('sprout', canvas.width / 2, 0)]
+    score = 0
+    playing = 1
+    requestAnimationFrame(animate)
+  }
+  start()
 })(window, document)

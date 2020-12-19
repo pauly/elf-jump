@@ -2,10 +2,11 @@
 ((window, document) => {
   let config = {}
   try {
-    config = JSON.parse(localStorage.getItem(process.env.npm_package_name))
+    config = JSON.parse(localStorage.getItem(process.env.npm_package_name)) || {}
   } catch (e) {
     console.log('config load failed', e)
   }
+  console.log('config is now', config)
 
   let {
     best = 0,
@@ -18,7 +19,7 @@
     // traction = 0.9,
     boost = 10,
     maxVX = 1.3
-  } = config || {}
+  } = config
 
   const canvas = document.getElementById('canvas')
   const ctx = canvas.getContext('2d')

@@ -13,4 +13,3 @@ coverage
 _site/**
 broken.txt
 lhreport.html
-dist/

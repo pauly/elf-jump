@@ -1,24 +1,25 @@
 {
   "name": "elf-jump",
   "version": "1.0.0",
-  "description": "A javaScript game inspired by Flappy Bird",
+  "description": "A christmas javascript game.",
   "main": "src/index.js",
   "scripts": {
     "build": "node src/build",
     "coverage": "nyc mocha && nyc check-coverage",
     "lint": "eslint . --quiet && echo '✔ All good!'",
-    "test": "npm run lint && npm run coverage"
+    "test": "npm run lint && npm run coverage",
+    "start": "npm run build && open dist/index.html"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/paulypopex/flappy-eggy.git"
+    "url": "git+https://gitlab.com/paulypopex/elf-jump.git"
   },
   "author": "Paul Clarke <pauly@clarkeology.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://gitlab.com/paulypopex/flappy-eggy/issues"
+    "url": "https://gitlab.com/paulypopex/elf-jump/issues"
   },
-  "homepage": "https://gitlab.com/paulypopex/flappy-eggy#readme",
+  "homepage": "https://gitlab.com/paulypopex/elf-jump#readme",
   "devDependencies": {
     "@babel/core": "7.9.0",
     "@babel/polyfill": "7.4.4",
