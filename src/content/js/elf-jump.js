@@ -21,7 +21,11 @@
     maxVX = 1.3
   } = config
 
-  const canvas = document.getElementById('canvas')
+  const canvas = document.createElement('canvas')
+  canvas.width = window.innerWidth - 20
+  canvas.height = window.innerHeight - 100
+  document.body.appendChild(canvas)
+
   const ctx = canvas.getContext('2d')
 
   const invertHex = hex => (Number('0x1' + hex) ^ 0xFFFFFF).toString(16)
@@ -33,8 +37,10 @@
   const falling = audio('falling')
   const fart = audio('fart')
 
-  const player = img('elf', 0, 0, 0, boost)
-  const drawRelativeTo = require('./drawRelativeTo')
+  // x = obj.cx - player.cx + (ctx.canvas.width - obj.width) / 2 + obj.vx
+  // y = obj.cy - player.cy + (ctx.canvas.height - obj.height) / 2 + obj.vy
+  // draw player in the middle of the screen
+  const player = img('elf', { x: 0, y: 0, vx: 0, vy: boost, dx: canvas.width / 2, dy: canvas.height / 2 })
   const checkCollision = require('./checkCollision')
 
   const gameOver = () => {
@@ -70,13 +76,13 @@
   const random = n => Math.ceil(Math.random() * n)
 
   const platform = [
-    img('cane3', 0, 300),
-    img('cane2', 0, -300)
+    img('cane3', { x: 0, y: 300 }),
+    img('cane2', { x: 0, y: -300 })
   ]
   const powerUp = [
   ]
 
-  let highestPlatform = Math.min.apply(null, platform.map(platform => platform.cy))
+  let furthestPlatform = Math.min.apply(null, platform.map(platform => platform.cy))
   let lowestPlatform // = Math.max.apply(null, platform.map(platform => platform.cy))
 
   function animate (timestamp) {
@@ -96,17 +102,17 @@
       player.vx = 0
     } */
 
-    for (let i = 0; i < platform.length; i++) {
-      drawRelativeTo(ctx)(player)(platform[i])
+    platform.forEach(obj => {
+      obj.draw(ctx, player)
 
-      const hitPlatform = checkCollision(player, platform[i])
-      if (hitPlatform === 2) {
+      const hitPlatform = checkCollision(player, obj)
+      if (hitPlatform > 1) {
         player.vy = Math.min(-player.vy, -boost)
         // player.vx *= traction
         bounce.play()
         // console.log('bounce', debug(player), player.vx.toFixed(2), player.vy.toFixed(2))
       }
-    }
+    })
 
     for (let i = 0; i < powerUp.length; i++) {
       if (checkCollision(player, powerUp[i])) {
@@ -117,7 +123,7 @@
         player.vy = boost * -3
         fart.play()
       } else {
-        drawRelativeTo(ctx)(player)(powerUp[i])
+        powerUp[i].draw(ctx, player)
       }
     }
 
@@ -125,24 +131,25 @@
     player.cx += player.vx
     player.cy += player.vy
 
+    // @todo direct
     player.src = 'img/elf' + (player.vy > 1 ? '-down' : '') + '.png'
 
-    // draw player in the middle of the screen
-    drawRelativeTo(ctx)(player)(player)
+    player.draw(ctx, player)
 
+    // furthestPlatform = Math.min.apply(null, platform.map(platform => platform.cy))
     // highest is really a lower number
-    if (player.cy < highestPlatform) {
-      const y = highestPlatform -= random(interval) + interval + player.cy / 1000 // player.cy is negative
+    if (player.cy < furthestPlatform) {
+      const y = furthestPlatform -= random(interval) + interval + player.cy / 1000 // player.cy is negative
 
       const x = platform[platform.length - 1].cx + random(maxJump * 2) - maxJump
       console.log({ x, y })
 
-      platform.push(img('cane' + random(4), x, y))
-      highestPlatform = y
+      platform.push(img('cane' + random(4), { x, y }))
+      furthestPlatform = y
       score++
       if (score > best) best = score
       if (random(10) > 9) {
-        powerUp.push(img('sprout', x, y - platform[0].height))
+        powerUp.push(img('sprout', { x, y: y - platform[0].height }))
       }
       if (platform.length > platforms) {
         platform.shift()
@@ -154,10 +161,7 @@
     if (player.cy > lowestPlatform) gameOver()
 
     ctx.font = '16px ' + font
-    ctx.fillText('Jump Jackie!', 10, 20)
-    if (!playing) {
-      ctx.fillText('◀️ and ▶️ to move', 10, 40)
-    }
+    ctx.fillText('◀️ and ▶️ to move', 10, 20)
     const scoreText = 'Score: ' + score + (playing ? '' : ' GAME OVER!')
     ctx.fillText(scoreText, 10, canvas.height - 40)
     ctx.fillText('Best: ' + best, 10, canvas.height - 20)
