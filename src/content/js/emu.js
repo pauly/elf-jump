@@ -31,9 +31,9 @@
   })
 
   const canvas = document.createElement('canvas')
-  canvas.width = window.innerWidth - 20
+  canvas.width = window.innerWidth - 10
   canvas.height = window.innerHeight - 100
-  document.body.appendChild(canvas)
+  document.body.insertBefore(canvas, document.body.firstChild)
 
   const ctx = canvas.getContext('2d')
   ctx.strokeStyle = '#000'
@@ -45,7 +45,7 @@
   const pop = audio('pop')
 
   const ground = canvas.height * 0.7
-  const player = img('emu', { x: 0, y: 0, vx: 1, vy: boost, dx: canvas.width / 2, dy: ground, f: 3 })
+  const player = img('blue', { x: 0, y: 0, vx: 1, vy: boost, dx: canvas.width / 2, dy: ground, f: 3 })
   const checkCollision = require('./checkCollision')
 
   let score = 0
@@ -185,7 +185,7 @@
       item[i].draw(ctx, player)
     }
 
-    move(player, lowestPlatform)
+    move(player)
     if (player.width) {
       score = Math.round(Math.max((player.cx - startLine) / player.width, score))
     }

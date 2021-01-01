@@ -1,6 +1,7 @@
 const { dirname, resolve } = require('path')
 const { inlineSource } = require('inline-source')
 const { transformSync } = require('@babel/core')
+const jscrush = require('jscrush')
 
 /*
  * Filter files to find HTML files.
@@ -29,6 +30,7 @@ const handler = (source, context) => {
         }
         const result = transformSync(String(source.fileContent))
         if (result) source.content = result.code
+        source.content = jscrush(source.content)
       }
     }
   }
