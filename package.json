@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "build": "node src/build",
-    "coverage": "nyc mocha && nyc check-coverage",
+    "coverage": "nyc mocha src/**/*.test.js && nyc check-coverage",
     "lint": "eslint . --quiet && echo '✔ All good!'",
     "test": "npm run lint && npm run coverage",
     "start": "npm run build && echo open http://localhost:3000/emu.html && node src/server.js"
@@ -65,5 +65,13 @@
   ],
   "directories": {
     "lib": "lib"
+  },
+  "mocha": {
+    "all": true,
+    "recursive": true,
+    "require": "./test/bootstrap.js",
+    "globals": [
+      "Image"
+    ]
   }
 }

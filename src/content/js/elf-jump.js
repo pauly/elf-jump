@@ -117,6 +117,7 @@
     for (let i = 0; i < powerUp.length; i++) {
       if (checkCollision(player, powerUp[i])) {
         powerUp.splice(i, 1)
+        clearTimeout(powerUpTimeout)
         powerUpTimeout = setTimeout(() => {
           player.vy = 0
         }, timeout)

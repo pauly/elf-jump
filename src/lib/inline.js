@@ -12,7 +12,7 @@ const jscrush = require('jscrush')
 
 const replaceRequire = source => (_, importPath) => {
   try {
-    const resolved = resolve(dirname(source.filepath), eval(importPath))
+    const resolved = resolve(dirname(source.filepath), eval(importPath)) // eslint-disable-line no-eval
     const moduleToImport = require(resolved)
     return String(moduleToImport)
   } catch (err) {
