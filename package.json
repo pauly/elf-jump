@@ -39,7 +39,7 @@
     "inline-source": "7.2.0",
     "interactjs": "1.10.2",
     "jimp": "0.16.1",
-    "jstransformer-nunjucks": "1.0.0",
+    "jstransformer-nunjucks": "1.2.0",
     "merge": "1.2.1",
     "metalsmith": "2.3.0",
     "metalsmith-babel": "5.1.0",
