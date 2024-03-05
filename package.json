@@ -41,7 +41,7 @@
     "jimp": "0.16.1",
     "jstransformer-nunjucks": "1.0.0",
     "merge": "1.2.1",
-    "metalsmith": "2.3.0",
+    "metalsmith": "2.6.3",
     "metalsmith-babel": "5.1.0",
     "metalsmith-in-place": "1.4.4",
     "metalsmith-layouts": "1.8.1",
