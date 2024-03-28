@@ -37,7 +37,7 @@
     "eslint-plugin-promise": "4.2.1",
     "eslint-plugin-standard": "4.1.0",
     "inline-source": "7.2.0",
-    "interactjs": "1.10.2",
+    "interactjs": "1.10.27",
     "jimp": "0.16.1",
     "jstransformer-nunjucks": "1.0.0",
     "merge": "1.2.1",
