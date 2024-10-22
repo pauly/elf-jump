@@ -21,7 +21,7 @@
   },
   "homepage": "https://gitlab.com/paulypopex/elf-jump#readme",
   "devDependencies": {
-    "@babel/core": "7.12.10",
+    "@babel/core": "7.25.9",
     "@babel/polyfill": "7.12.1",
     "@babel/preset-env": "7.12.11",
     "babel-plugin-transform-inline-environment-variables": "0.4.3",
